@@ -1,0 +1,40 @@
+version: "3.3"
+networks:
+  nginx-php:
+    name: nginx-php
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_IP_CIDR}
+services:
+  nginx:
+    container_name: nginx
+    ports:
+      - ${NGINX_BIND_IP}:${NGINX_PORT_HTTP}:8080
+      - ${NGINX_BIND_IP}:${NGINX_PORT_HTTPS}:8443
+    environment:
+      - TZ=${TZ}
+    restart: always
+    volumes:
+      - ${NGINX_CERTS_DIR}:/opt/bitnami/nginx/conf/bitnami/certs/:ro
+      - ./nginx/:/opt/bitnami/nginx/conf/server_blocks/:ro
+      - ./logs/:/opt/bitnami/nginx/logs/:rw
+      - ./app/:/app/:rw
+    depends_on:
+      - php-fpm
+    networks:
+      - nginx-php
+    image: bitnami/nginx:1.22-debian-11
+  php-fpm:
+    container_name: php-fpm
+    tty: true
+    environment:
+      - TZ=${TZ}
+    restart: always
+    volumes:
+      - ./php-fpm/:/opt/bitnami/php/etc/conf.d/:ro
+      - ./app/:/app/:rw
+    networks:
+      - nginx-php
+    image: bitnami/php-fpm:7.4-debian-11
