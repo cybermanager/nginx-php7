@@ -1,0 +1,5 @@
+.env
+app
+logs
+nginx
+php-fpm
